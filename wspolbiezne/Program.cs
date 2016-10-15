@@ -62,25 +62,43 @@ namespace wspolbiezne
         }
 
 
-        static void sprawdzWielo(int i, List<int> Y, semeforZ Z)
+
+        public static class wielo
         {
-            if (!Y.Contains(i))
+            static public int semafor = 0;
+            static public List<int> X;
+            static public List<int> Y;
+            static public semeforZ Z;
+            static public void start(List<int> A, List<int> B, semeforZ C)
             {
-                Z.Add(i);
+                X = A;
+                Y = B;
+                Z = C;
             }
-        }
-        public static void wielo(List<int> X, List<int> Y, semeforZ Z)
-        {
-            foreach (int i in X)
+
+            static void sprawdzWielo(int i, List<int> L)
             {
-                Thread trd = new Thread(() => sprawdzWielo(i, Y, Z));
-                trd.Start();
+                if (!L.Contains(i))
+                {
+                    semafor++;
+                    Z.Add(i);
+                }
+                semafor--;
             }
-            foreach (int i in Y)
+            static public void doIt()
             {
-                Thread trd = new Thread(() => sprawdzWielo(i, X, Z));
-                trd.Start();
+                foreach (int i in X)
+                {
+                    Thread trd = new Thread(() => sprawdzWielo(i, Y));
+                    trd.Start();
+                }
+                foreach (int i in Y)
+                {
+                    Thread trd = new Thread(() => sprawdzWielo(i, X));
+                    trd.Start();
+                }
             }
+
 
         }
 
@@ -129,7 +147,7 @@ namespace wspolbiezne
             DateTime stopTime;
             TimeSpan roznica;
 
-
+            /*
             startTime = DateTime.Now;
             jedno(X, Y, Z);
             Console.WriteLine("\nZbior Z:");
@@ -140,8 +158,8 @@ namespace wspolbiezne
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
-
-
+            */
+            /*
             startTime = DateTime.Now;
             dwu(X, Y, Z);
             Console.WriteLine("\nZbior Z:");
@@ -153,9 +171,11 @@ namespace wspolbiezne
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
-
+            */
+            
             startTime = DateTime.Now;
-            wielo(X, Y, Z);
+            wielo.start(X, Y, Z);
+            wielo.doIt();
             Console.WriteLine("\nZbior Z:");
             while (Z.sem == true) ;
             foreach (int i in Z.Z)
@@ -165,7 +185,7 @@ namespace wspolbiezne
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
-
+            
 
 
             Console.ReadKey();
