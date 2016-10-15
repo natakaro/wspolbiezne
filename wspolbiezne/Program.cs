@@ -78,9 +78,9 @@ namespace wspolbiezne
 
             static void sprawdzWielo(int i, List<int> L)
             {
+                semafor++;
                 if (!L.Contains(i))
                 {
-                    semafor++;
                     Z.Add(i);
                 }
                 semafor--;
@@ -147,7 +147,7 @@ namespace wspolbiezne
             DateTime stopTime;
             TimeSpan roznica;
 
-            /*
+            
             startTime = DateTime.Now;
             jedno(X, Y, Z);
             Console.WriteLine("\nZbior Z:");
@@ -158,7 +158,7 @@ namespace wspolbiezne
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
-            */
+
             /*
             startTime = DateTime.Now;
             dwu(X, Y, Z);
@@ -172,12 +172,17 @@ namespace wspolbiezne
             roznica = stopTime - startTime;
             Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
             */
-            
+
+            Z.Z.Clear();
+
             startTime = DateTime.Now;
             wielo.start(X, Y, Z);
             wielo.doIt();
             Console.WriteLine("\nZbior Z:");
-            while (Z.sem == true) ;
+            while (wielo.semafor != 0)
+            {
+                Console.Write(wielo.semafor + " ");
+            }
             foreach (int i in Z.Z)
             {
                 Console.Write(i + " ");
