@@ -1,0 +1,6 @@
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\bin\Debug\wspolbiezne.exe.config
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\bin\Debug\wspolbiezne.exe
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\bin\Debug\wspolbiezne.pdb
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\obj\Debug\wspolbiezne.csprojResolveAssemblyReference.cache
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\obj\Debug\wspolbiezne.exe
+c:\users\meds\documents\visual studio 2015\Projects\wspolbiezne\wspolbiezne\obj\Debug\wspolbiezne.pdb
