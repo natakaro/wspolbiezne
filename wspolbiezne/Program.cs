@@ -90,11 +90,13 @@ namespace wspolbiezne
                 foreach (int i in X)
                 {
                     Thread trd = new Thread(() => sprawdzWielo(i, Y));
+                    trd.IsBackground = true;
                     trd.Start();
                 }
                 foreach (int i in Y)
                 {
                     Thread trd = new Thread(() => sprawdzWielo(i, X));
+                    trd.IsBackground = true;
                     trd.Start();
                 }
             }
@@ -113,20 +115,39 @@ namespace wspolbiezne
             List<int> X = new List<int>();
             List<int> Y = new List<int>();
             semeforZ Z = new semeforZ();
-            string filename;
-            Console.WriteLine("Podaj nazwe pliku:");
-            filename = Console.ReadLine();
-            string[] lines = System.IO.File.ReadAllLines(filename+".txt");
-
-            bool temp=false;
-            foreach (string line in lines)
+            Console.WriteLine("Wybor 1-nazwa pliku else random");
+            int wybor = Console.Read();
+            if(wybor == 1)
             {
-                if(line == "#A") {}
-                else if(line == "#B") {temp = true;}
-                else
+                string filename;
+                Console.WriteLine("Podaj nazwe pliku:");
+                filename = Console.ReadLine();
+                string[] lines = System.IO.File.ReadAllLines(filename + ".txt");
+
+                bool temp = false;
+                foreach (string line in lines)
                 {
-                    if (temp == false) { X.Add(Int32.Parse(line)); }
-                    else { Y.Add(Int32.Parse(line)); }
+                    if (line == "#A") { }
+                    else if (line == "#B") { temp = true; }
+                    else
+                    {
+                        if (temp == false) { X.Add(Int32.Parse(line)); }
+                        else { Y.Add(Int32.Parse(line)); }
+                    }
+                }
+            }
+            else
+            {
+                Random rnd = new Random();
+                int a = rnd.Next(500, 1000);
+                int b = rnd.Next(500, 1000);
+                for(int i=0; i<a; i++)
+                {
+                    X.Add(rnd.Next(0, 1000));
+                }
+                for (int i = 0; i < b; i++)
+                {
+                    Y.Add(rnd.Next(0, 1000));
                 }
             }
 
@@ -179,10 +200,7 @@ namespace wspolbiezne
             wielo.start(X, Y, Z);
             wielo.doIt();
             Console.WriteLine("\nZbior Z:");
-            while (wielo.semafor != 0)
-            {
-                Console.Write(wielo.semafor + " ");
-            }
+            while (wielo.semafor != 0){}
             foreach (int i in Z.Z)
             {
                 Console.Write(i + " ");
