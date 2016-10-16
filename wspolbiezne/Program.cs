@@ -12,7 +12,7 @@ namespace wspolbiezne
         public class semeforZ
         {
             public bool sem = false;
-            public List<int> Z = new List<int>();
+            public HashSet<int> Z = new HashSet<int>();
             public void Add(int x)
             {
                 while (sem == true) { }
@@ -21,7 +21,7 @@ namespace wspolbiezne
                 sem = false;
             }
         }
-        public static void jedno(List<int> X, List<int> Y, semeforZ Z)
+        public static void jedno(HashSet<int> X, HashSet<int> Y, semeforZ Z)
         {
             foreach (int i in X)
             {
@@ -40,7 +40,7 @@ namespace wspolbiezne
             }
         }
 
-        static void sprawdzDwu(List<int> A, List<int> B, semeforZ Z)
+        static void sprawdzDwu(HashSet<int> A, HashSet<int> B, semeforZ Z)
         {
             foreach (int i in A)
             {
@@ -52,7 +52,7 @@ namespace wspolbiezne
             }
         }
 
-        public static void dwu(List<int> X, List<int> Y, semeforZ Z)
+        public static void dwu(HashSet<int> X, HashSet<int> Y, semeforZ Z)
         {
             //Thread trd = new Thread(new ThreadStart(sprawdz(X, Y, Z)));
             Thread trd = new Thread(() => sprawdzDwu(X, Y, Z));
@@ -69,17 +69,17 @@ namespace wspolbiezne
         public static class wielo
         {
             static public int semafor = 0;
-            static public List<int> X;
-            static public List<int> Y;
+            static public HashSet<int> X;
+            static public HashSet<int> Y;
             static public semeforZ Z;
-            static public void start(List<int> A, List<int> B, semeforZ C)
+            static public void start(HashSet<int> A, HashSet<int> B, semeforZ C)
             {
                 X = A;
                 Y = B;
                 Z = C;
             }
 
-            static void sprawdzWielo(int i, List<int> L)
+            static void sprawdzWielo(int i, HashSet<int> L)
             {
                 semafor++;
                 if (!L.Contains(i))
@@ -106,16 +106,11 @@ namespace wspolbiezne
             }
         }
 
-        private static void sprawdz()
-        {
-            throw new NotImplementedException();
-        }
-
         static void Main(string[] args)
         {
             //tu bo Program jest static
-            List<int> X = new List<int>();
-            List<int> Y = new List<int>();
+            HashSet<int> X = new HashSet<int>();
+            HashSet<int> Y = new HashSet<int>();
             semeforZ Z = new semeforZ();
             Console.WriteLine("Wybor 1 - z pliku, 2 - random bez wypisywania zawartosci, else random");
             bool wypisuj = true;
