@@ -40,13 +40,14 @@ namespace wspolbiezne
             }
         }
 
-        static void sprawdzDwu(List<int> X, List<int> Y, semeforZ Z)
+        static void sprawdzDwu(List<int> A, List<int> B, semeforZ Z)
         {
-            foreach (int i in X)
+            foreach (int i in A)
             {
-                if (!Y.Contains(i))
+                if (!B.Contains(i))
                 {
                     Z.Add(i);
+                    Thread.Yield();
                 }
             }
         }
@@ -57,11 +58,13 @@ namespace wspolbiezne
             Thread trd = new Thread(() => sprawdzDwu(X, Y, Z));
             Thread trd2 = new Thread(() => sprawdzDwu(Y, X, Z));
             //trd.IsBackground = true;
+            //trd2.IsBackground = true;
             trd.Start();
             trd2.Start();
+
+            trd.Join();
+            trd2.Join();
         }
-
-
 
         public static class wielo
         {
@@ -84,24 +87,23 @@ namespace wspolbiezne
                     Z.Add(i);
                 }
                 semafor--;
+                Thread.Yield();
             }
             static public void doIt()
             {
                 foreach (int i in X)
                 {
                     Thread trd = new Thread(() => sprawdzWielo(i, Y));
-                    trd.IsBackground = true;
+                    //trd.IsBackground = true;
                     trd.Start();
                 }
                 foreach (int i in Y)
                 {
                     Thread trd = new Thread(() => sprawdzWielo(i, X));
-                    trd.IsBackground = true;
+                    //trd.IsBackground = true;
                     trd.Start();
                 }
             }
-
-
         }
 
         private static void sprawdz()
@@ -115,9 +117,10 @@ namespace wspolbiezne
             List<int> X = new List<int>();
             List<int> Y = new List<int>();
             semeforZ Z = new semeforZ();
-            Console.WriteLine("Wybor 1-nazwa pliku else random");
-            int wybor = Console.Read();
-            if(wybor == 1)
+            Console.WriteLine("Wybor 1 - z pliku, 2 - random bez wypisywania zawartosci, else random");
+            bool wypisuj = true;
+            string wybor = Console.ReadLine();
+            if(wybor == "1")
             {
                 string filename;
                 Console.WriteLine("Podaj nazwe pliku:");
@@ -138,6 +141,8 @@ namespace wspolbiezne
             }
             else
             {
+                if (wybor == "2")
+                    wypisuj = false;
                 Random rnd = new Random();
                 int a = rnd.Next(500, 1000);
                 int b = rnd.Next(500, 1000);
@@ -151,65 +156,77 @@ namespace wspolbiezne
                 }
             }
 
-            Console.WriteLine("\nZbior X:");
-            foreach (int i in X)
+            if (wypisuj)
             {
-                Console.Write(i + " ");
-            }
+                Console.WriteLine("\nZbior X:");
+                foreach (int i in X)
+                {
+                    Console.Write(i + " ");
+                }
 
-            Console.WriteLine("\nZbior Y:");
-            foreach (int i in Y)
-            {
-                Console.Write(i + " ");
+                Console.WriteLine("\nZbior Y:");
+                foreach (int i in Y)
+                {
+                    Console.Write(i + " ");
+                }
             }
-
 
             DateTime startTime;
             DateTime stopTime;
             TimeSpan roznica;
 
-            
+            Console.WriteLine("\n============\n");
+
             startTime = DateTime.Now;
             jedno(X, Y, Z);
-            Console.WriteLine("\nZbior Z:");
-            foreach (int i in Z.Z)
-            {
-                Console.Write(i + " ");
-            }
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
-            Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
+            if (wypisuj)
+            {
+                Console.WriteLine("\nJEDEN WATEK - Zbior Z:");
+                foreach (int i in Z.Z)
+                {
+                    Console.Write(i + " ");
+                }
+            }
+            Console.WriteLine("\nJEDEN WATEK - Czas pracy:\n" + roznica.TotalMilliseconds);
 
-            /*
-            startTime = DateTime.Now;
-            dwu(X, Y, Z);
-            Console.WriteLine("\nZbior Z:");
-            while (Z.sem == true);
-            foreach (int i in Z.Z)
-            {
-                Console.Write(i + " ");
-            }
-            stopTime = DateTime.Now;
-            roznica = stopTime - startTime;
-            Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
-            */
 
             Z.Z.Clear();
 
             startTime = DateTime.Now;
-            wielo.start(X, Y, Z);
-            wielo.doIt();
-            Console.WriteLine("\nZbior Z:");
-            while (wielo.semafor != 0){}
-            foreach (int i in Z.Z)
-            {
-                Console.Write(i + " ");
-            }
+            dwu(X, Y, Z);
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
-            Console.WriteLine("\nCzas pracy:\n" + roznica.TotalMilliseconds);
+            if (wypisuj)
+            {
+                Console.WriteLine("\nDWA WATKI - Zbior Z:");
+                while (Z.sem == true) { }
+                foreach (int i in Z.Z)
+                {
+                    Console.Write(i + " ");
+                }
+            }
+            Console.WriteLine("\nDWA WATKI - Czas pracy:\n" + roznica.TotalMilliseconds);
             
 
+            Z.Z.Clear();
+
+            wielo.start(X, Y, Z);
+            startTime = DateTime.Now;           
+            wielo.doIt();
+            stopTime = DateTime.Now;
+            roznica = stopTime - startTime;
+            if (wypisuj)
+            {
+                Console.WriteLine("\nWIELE WATKOW - Zbior Z:");
+                while (wielo.semafor != 0) { }
+                foreach (int i in Z.Z)
+                {
+                    Console.Write(i + " ");
+                }
+            }
+            Console.WriteLine("\nWIELE WATKOW - Czas pracy:\n" + roznica.TotalMilliseconds);
 
             Console.ReadKey();
         }
