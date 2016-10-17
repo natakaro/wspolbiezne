@@ -9,25 +9,24 @@ namespace wspolbiezne
 {
     class Program
     {
-        public class semeforZ
+        public class SemaphoredSet
         {
-            public bool sem = false;
+            public Semaphore sem = new Semaphore(1, 1);
             public HashSet<int> Z = new HashSet<int>();
             public void Add(int x)
             {
-                while (sem == true) { }
-                sem = true;
+                sem.WaitOne();
                 Z.Add(x);
-                sem = false;
+                sem.Release();
             }
         }
-        public static void jedno(HashSet<int> X, HashSet<int> Y, semeforZ Z)
+        public static void jedno(HashSet<int> X, HashSet<int> Y, SemaphoredSet Z)
         {
             foreach (int i in X)
             {
                 if (!Y.Contains(i))
                 {
-                    Z.Add(i);
+                    Z.Z.Add(i);
                 }
             }
 
@@ -35,12 +34,12 @@ namespace wspolbiezne
             {
                 if (!X.Contains(i))
                 {
-                    Z.Add(i);
+                    Z.Z.Add(i);
                 }
             }
         }
 
-        static void sprawdzDwu(HashSet<int> A, HashSet<int> B, semeforZ Z)
+        static void sprawdzDwu(HashSet<int> A, HashSet<int> B, SemaphoredSet Z)
         {
             foreach (int i in A)
             {
@@ -52,7 +51,7 @@ namespace wspolbiezne
             }
         }
 
-        public static void dwu(HashSet<int> X, HashSet<int> Y, semeforZ Z)
+        public static void dwu(HashSet<int> X, HashSet<int> Y, SemaphoredSet Z)
         {
             //Thread trd = new Thread(new ThreadStart(sprawdz(X, Y, Z)));
             Thread trd = new Thread(() => sprawdzDwu(X, Y, Z));
@@ -68,11 +67,10 @@ namespace wspolbiezne
 
         public static class wielo
         {
-            static public int semafor = 0;
             static public HashSet<int> X;
             static public HashSet<int> Y;
-            static public semeforZ Z;
-            static public void start(HashSet<int> A, HashSet<int> B, semeforZ C)
+            static public SemaphoredSet Z;
+            static public void start(HashSet<int> A, HashSet<int> B, SemaphoredSet C)
             {
                 X = A;
                 Y = B;
@@ -81,12 +79,10 @@ namespace wspolbiezne
 
             static void sprawdzWielo(int i, HashSet<int> L)
             {
-                semafor++;
                 if (!L.Contains(i))
                 {
                     Z.Add(i);
                 }
-                semafor--;
                 Thread.Yield();
             }
             static public void doIt()
@@ -111,7 +107,7 @@ namespace wspolbiezne
             //tu bo Program jest static
             HashSet<int> X = new HashSet<int>();
             HashSet<int> Y = new HashSet<int>();
-            semeforZ Z = new semeforZ();
+            SemaphoredSet Z = new SemaphoredSet();
             Console.WriteLine("Wybor 1 - z pliku, 2 - random bez wypisywania zawartosci, else random");
             bool wypisuj = true;
             string wybor = Console.ReadLine();
@@ -196,7 +192,6 @@ namespace wspolbiezne
             if (wypisuj)
             {
                 Console.WriteLine("\nDWA WATKI - Zbior Z:");
-                while (Z.sem == true) { }
                 foreach (int i in Z.Z)
                 {
                     Console.Write(i + " ");
@@ -215,7 +210,6 @@ namespace wspolbiezne
             if (wypisuj)
             {
                 Console.WriteLine("\nWIELE WATKOW - Zbior Z:");
-                while (wielo.semafor != 0) { }
                 foreach (int i in Z.Z)
                 {
                     Console.Write(i + " ");
