@@ -9,19 +9,19 @@ namespace wspolbiezne
 {
     class Program
     {
-        public class semeforZ
+        public class SemaphoredSet
         {
             public bool sem = false;
-            public HashSet<int> Z = new HashSet<int>();
+            public HashSet<int> set = new HashSet<int>();
             public void Add(int x)
             {
                 while (sem == true) { }
                 sem = true;
-                Z.Add(x);
+                set.Add(x);
                 sem = false;
             }
         }
-        public static void jedno(HashSet<int> X, HashSet<int> Y, semeforZ Z)
+        public static void single(HashSet<int> X, HashSet<int> Y, SemaphoredSet Z)
         {
             foreach (int i in X)
             {
@@ -40,70 +40,135 @@ namespace wspolbiezne
             }
         }
 
-        static void sprawdzDwu(HashSet<int> A, HashSet<int> B, semeforZ Z)
+        public static class dual
         {
-            foreach (int i in A)
-            {
-                if (!B.Contains(i))
-                {
-                    Z.Add(i);
-                    Thread.Yield();
-                }
-            }
-        }
-
-        public static void dwu(HashSet<int> X, HashSet<int> Y, semeforZ Z)
-        {
-            //Thread trd = new Thread(new ThreadStart(sprawdz(X, Y, Z)));
-            Thread trd = new Thread(() => sprawdzDwu(X, Y, Z));
-            Thread trd2 = new Thread(() => sprawdzDwu(Y, X, Z));
-            //trd.IsBackground = true;
-            //trd2.IsBackground = true;
-            trd.Start();
-            trd2.Start();
-
-            trd.Join();
-            trd2.Join();
-        }
-
-        public static class wielo
-        {
-            static public int semafor = 0;
             static public HashSet<int> X;
             static public HashSet<int> Y;
-            static public semeforZ Z;
-            static public void start(HashSet<int> A, HashSet<int> B, semeforZ C)
+            static public SemaphoredSet Z;
+            static public Thread trd1;
+            static public Thread trd2;
+
+            static public HashSet<int> Z1, Z2;
+
+            static public void start(HashSet<int> A, HashSet<int> B, SemaphoredSet C)
             {
                 X = A;
                 Y = B;
                 Z = C;
+                Z1 = new HashSet<int>();
+                Z2 = new HashSet<int>();
             }
 
-            static void sprawdzWielo(int i, HashSet<int> L)
+            static void check(HashSet<int> A, HashSet<int> B, SemaphoredSet Z)
             {
-                semafor++;
+                foreach (int i in A)
+                {
+                    if (!B.Contains(i))
+                    {
+                        Z.Add(i);
+                        Thread.Yield();
+                    }
+                }
+            }
+
+            static void checkNoSemaphore(HashSet<int> A, HashSet<int> B, HashSet<int> Z)
+            {
+                foreach (int i in A)
+                {
+                    if (!B.Contains(i))
+                    {
+                        Z.Add(i);
+                        Thread.Yield();
+                    }
+                }
+            }
+
+            static public void create()
+            {
+                trd1 = new Thread(() => check(X, Y, Z));
+                trd2 = new Thread(() => check(Y, X, Z));
+            }
+
+            static public void createNoSemaphore()
+            {
+                trd1 = new Thread(() => checkNoSemaphore(X, Y, Z1));
+                trd2 = new Thread(() => checkNoSemaphore(Y, X, Z2));
+            }
+
+            static public void run()
+            {
+                trd1.Start();
+                trd2.Start();
+
+                trd1.Join();
+                trd2.Join();
+            }
+
+            static public void joinNoSemaphore()
+            {
+                foreach (int i in Z1)
+                {
+                    Z.Add(i);
+                }
+                foreach(int i in Z2)
+                {
+                    Z.Add(i);
+                }
+            }
+        }
+
+        public static class multi
+        {
+            static public HashSet<int> X;
+            static public HashSet<int> Y;
+            static public SemaphoredSet Z;
+            static public HashSet<Thread> threads;
+
+            static public void start(HashSet<int> A, HashSet<int> B, SemaphoredSet C)
+            {
+                X = A;
+                Y = B;
+                Z = C;
+                threads = new HashSet<Thread>();
+            }
+
+            static void check(int i, HashSet<int> L)
+            {
                 if (!L.Contains(i))
                 {
                     Z.Add(i);
                 }
-                semafor--;
                 Thread.Yield();
             }
-            static public void doIt()
+            static public void create()
             {
                 foreach (int i in X)
                 {
-                    Thread trd = new Thread(() => sprawdzWielo(i, Y));
+                    Thread trd = new Thread(() => check(i, Y));
                     //trd.IsBackground = true;
-                    trd.Start();
+                    threads.Add(trd);
                 }
                 foreach (int i in Y)
                 {
-                    Thread trd = new Thread(() => sprawdzWielo(i, X));
+                    Thread trd = new Thread(() => check(i, X));
                     //trd.IsBackground = true;
-                    trd.Start();
+                    threads.Add(trd);
                 }
             }
+
+            static public void run()
+            {
+                foreach (Thread trd in threads)
+                {
+                    trd.Start();
+                }
+
+                foreach (Thread trd in threads)
+                {
+                    trd.Join();
+                }
+            }
+
         }
 
         static void Main(string[] args)
@@ -111,7 +176,7 @@ namespace wspolbiezne
             //tu bo Program jest static
             HashSet<int> X = new HashSet<int>();
             HashSet<int> Y = new HashSet<int>();
-            semeforZ Z = new semeforZ();
+            SemaphoredSet Z = new SemaphoredSet();
             Console.WriteLine("Wybor 1 - z pliku, 2 - random bez wypisywania zawartosci, else random");
             bool wypisuj = true;
             string wybor = Console.ReadLine();
@@ -139,15 +204,15 @@ namespace wspolbiezne
                 if (wybor == "2")
                     wypisuj = false;
                 Random rnd = new Random();
-                int a = rnd.Next(500, 1000);
-                int b = rnd.Next(500, 1000);
+                int a = rnd.Next(5000, 10000);
+                int b = rnd.Next(5000, 10000);
                 for(int i=0; i<a; i++)
                 {
-                    X.Add(rnd.Next(0, 1000));
+                    X.Add(rnd.Next(0, 10000));
                 }
                 for (int i = 0; i < b; i++)
                 {
-                    Y.Add(rnd.Next(0, 1000));
+                    Y.Add(rnd.Next(0, 10000));
                 }
             }
 
@@ -172,14 +237,19 @@ namespace wspolbiezne
 
             Console.WriteLine("\n============\n");
 
+            dual.start(X, Y, Z);
+            multi.start(X, Y, Z);
+
+            Console.ReadKey();
+
             startTime = DateTime.Now;
-            jedno(X, Y, Z);
+            single(X, Y, Z);
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             if (wypisuj)
             {
                 Console.WriteLine("\nJEDEN WATEK - Zbior Z:");
-                foreach (int i in Z.Z)
+                foreach (int i in Z.set)
                 {
                     Console.Write(i + " ");
                 }
@@ -187,36 +257,62 @@ namespace wspolbiezne
             Console.WriteLine("\nJEDEN WATEK - Czas pracy:\n" + roznica.TotalMilliseconds);
 
 
-            Z.Z.Clear();
+            Z.set.Clear();
 
+            Console.ReadKey();
+
+            dual.create();
             startTime = DateTime.Now;
-            dwu(X, Y, Z);
+            dual.run();
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             if (wypisuj)
             {
                 Console.WriteLine("\nDWA WATKI - Zbior Z:");
                 while (Z.sem == true) { }
-                foreach (int i in Z.Z)
+                foreach (int i in Z.set)
                 {
                     Console.Write(i + " ");
                 }
             }
             Console.WriteLine("\nDWA WATKI - Czas pracy:\n" + roznica.TotalMilliseconds);
+
             
+            Z.set.Clear();
 
-            Z.Z.Clear();
+            Console.ReadKey();
 
-            wielo.start(X, Y, Z);
+            dual.createNoSemaphore();
+            startTime = DateTime.Now;
+            dual.run();
+            stopTime = DateTime.Now;
+            dual.joinNoSemaphore();
+            roznica = stopTime - startTime;
+            if (wypisuj)
+            {
+                Console.WriteLine("\nDWA WATKI BEZ SEMAFORÓW - Zbior Z:");
+                while (Z.sem == true) { }
+                foreach (int i in Z.set)
+                {
+                    Console.Write(i + " ");
+                }
+            }
+            Console.WriteLine("\nDWA WATKI BEZ SEMAFORÓW - Czas pracy:\n" + roznica.TotalMilliseconds);
+
+
+            Z.set.Clear();
+
+            Console.ReadKey();
+
+            multi.create();
             startTime = DateTime.Now;           
-            wielo.doIt();
+            multi.run();
             stopTime = DateTime.Now;
             roznica = stopTime - startTime;
             if (wypisuj)
             {
                 Console.WriteLine("\nWIELE WATKOW - Zbior Z:");
-                while (wielo.semafor != 0) { }
-                foreach (int i in Z.Z)
+                foreach (int i in Z.set)
                 {
                     Console.Write(i + " ");
                 }
