@@ -31,6 +31,8 @@ namespace wspolbiezne
                 }
             }
 
+            //Thread.Sleep(10);
+
             foreach (int i in Y)
             {
                 if (!X.Contains(i))
@@ -38,6 +40,8 @@ namespace wspolbiezne
                     Z.Add(i);
                 }
             }
+
+            //Thread.Sleep(10);
         }
 
         public static class dual
@@ -45,8 +49,8 @@ namespace wspolbiezne
             static public HashSet<int> X;
             static public HashSet<int> Y;
             static public SemaphoredSet Z;
-            static public Thread trd1;
-            static public Thread trd2;
+
+            static public Task[] tasks;
 
             static public HashSet<int> Z1, Z2;
 
@@ -55,6 +59,8 @@ namespace wspolbiezne
                 X = A;
                 Y = B;
                 Z = C;
+                tasks = new Task[2];
+
                 Z1 = new HashSet<int>();
                 Z2 = new HashSet<int>();
             }
@@ -66,9 +72,9 @@ namespace wspolbiezne
                     if (!B.Contains(i))
                     {
                         Z.Add(i);
-                        Thread.Yield();
                     }
                 }
+                //Thread.Sleep(10);
             }
 
             static void checkNoSemaphore(HashSet<int> A, HashSet<int> B, HashSet<int> Z)
@@ -78,30 +84,25 @@ namespace wspolbiezne
                     if (!B.Contains(i))
                     {
                         Z.Add(i);
-                        Thread.Yield();
                     }
                 }
-            }
-
-            static public void create()
-            {
-                trd1 = new Thread(() => check(X, Y, Z));
-                trd2 = new Thread(() => check(Y, X, Z));
-            }
-
-            static public void createNoSemaphore()
-            {
-                trd1 = new Thread(() => checkNoSemaphore(X, Y, Z1));
-                trd2 = new Thread(() => checkNoSemaphore(Y, X, Z2));
+                //Thread.Sleep(10);
             }
 
             static public void run()
             {
-                trd1.Start();
-                trd2.Start();
+                tasks[0] = Task.Factory.StartNew(() => check(X, Y, Z));
+                tasks[1] = Task.Factory.StartNew(() => check(Y, X, Z));
 
-                trd1.Join();
-                trd2.Join();
+                Task.WaitAll(tasks);
+            }
+
+            static public void runNoSemaphore()
+            {
+                tasks[0] = Task.Factory.StartNew(() => checkNoSemaphore(X, Y, Z1));
+                tasks[1] = Task.Factory.StartNew(() => checkNoSemaphore(Y, X, Z2));
+
+                Task.WaitAll(tasks);
             }
 
             static public void joinNoSemaphore()
@@ -122,14 +123,18 @@ namespace wspolbiezne
             static public HashSet<int> X;
             static public HashSet<int> Y;
             static public SemaphoredSet Z;
-            static public HashSet<Thread> threads;
+
+            static public Task[] tasks;
+            static public bool[] results;
 
             static public void start(HashSet<int> A, HashSet<int> B, SemaphoredSet C)
             {
                 X = A;
                 Y = B;
                 Z = C;
-                threads = new HashSet<Thread>();
+
+                tasks = new Task[X.Count + Y.Count];
+                results = new bool[10000];
             }
 
             static void check(int i, HashSet<int> L)
@@ -138,37 +143,61 @@ namespace wspolbiezne
                 {
                     Z.Add(i);
                 }
-                Thread.Yield();
-            }
-            static public void create()
-            {
-                foreach (int i in X)
-                {
-                    Thread trd = new Thread(() => check(i, Y));
-                    //trd.IsBackground = true;
-                    threads.Add(trd);
-                }
-                foreach (int i in Y)
-                {
-                    Thread trd = new Thread(() => check(i, X));
-                    //trd.IsBackground = true;
-                    threads.Add(trd);
-                }
+                //Thread.Sleep(10);
             }
 
+            static void checkNoSemaphore(int i, HashSet<int> L)
+            {
+                if (!L.Contains(i))
+                {
+                    results[i] = true;
+                }
+                //Thread.Sleep(10);
+            }
             static public void run()
             {
-                foreach (Thread trd in threads)
+                int i = 0;
+                foreach (int x in X)
                 {
-                    trd.Start();
+                    tasks[i] = Task.Factory.StartNew(() => check(x, Y));
+                    i++;
+                }
+                foreach (int y in Y)
+                {
+                    tasks[i] = Task.Factory.StartNew(() => check(y, X));
+                    i++;
                 }
 
-                foreach (Thread trd in threads)
-                {
-                    trd.Join();
-                }
+                Task.WaitAll(tasks);
             }
 
+            static public void runNoSemaphore()
+            {
+                int i = 0;
+                foreach (int x in X)
+                {
+                    tasks[i] = Task.Factory.StartNew(() => checkNoSemaphore(x, Y));
+                    i++;
+                }
+                foreach (int y in Y)
+                {
+                    tasks[i] = Task.Factory.StartNew(() => checkNoSemaphore(y, X));
+                    i++;
+                }
+
+                Task.WaitAll(tasks);
+            }
+
+            static public void joinNoSemaphore()
+            {
+                for(int i = 0; i < 10000; i++)
+                {
+                    if (results[i] == true)
+                    {
+                        Z.Add(i);
+                    }
+                }
+            }
         }
 
         static void Main(string[] args)
@@ -204,8 +233,8 @@ namespace wspolbiezne
                 if (wybor == "2")
                     wypisuj = false;
                 Random rnd = new Random();
-                int a = rnd.Next(5000, 10000);
-                int b = rnd.Next(5000, 10000);
+                int a = rnd.Next(50000, 100000);
+                int b = rnd.Next(50000, 100000);
                 for(int i=0; i<a; i++)
                 {
                     X.Add(rnd.Next(0, 10000));
@@ -261,7 +290,6 @@ namespace wspolbiezne
 
             Console.ReadKey();
 
-            dual.create();
             startTime = DateTime.Now;
             dual.run();
             stopTime = DateTime.Now;
@@ -282,9 +310,8 @@ namespace wspolbiezne
 
             Console.ReadKey();
 
-            dual.createNoSemaphore();
             startTime = DateTime.Now;
-            dual.run();
+            dual.runNoSemaphore();
             stopTime = DateTime.Now;
             dual.joinNoSemaphore();
             roznica = stopTime - startTime;
@@ -304,7 +331,6 @@ namespace wspolbiezne
 
             Console.ReadKey();
 
-            multi.create();
             startTime = DateTime.Now;           
             multi.run();
             stopTime = DateTime.Now;
@@ -318,6 +344,26 @@ namespace wspolbiezne
                 }
             }
             Console.WriteLine("\nWIELE WATKOW - Czas pracy:\n" + roznica.TotalMilliseconds);
+
+
+            Z.set.Clear();
+
+            Console.ReadKey();
+
+            startTime = DateTime.Now;
+            multi.run();
+            stopTime = DateTime.Now;
+            multi.joinNoSemaphore();
+            roznica = stopTime - startTime;
+            if (wypisuj)
+            {
+                Console.WriteLine("\nWIELE WATKOW BEZ SEMAFORÓW - Zbior Z:");
+                foreach (int i in Z.set)
+                {
+                    Console.Write(i + " ");
+                }
+            }
+            Console.WriteLine("\nWIELE WATKOW BEZ SEMAFORÓW - Czas pracy:\n" + roznica.TotalMilliseconds);
 
             Console.ReadKey();
         }
